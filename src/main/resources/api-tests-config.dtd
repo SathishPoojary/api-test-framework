@@ -1,0 +1,79 @@
+<!ELEMENT api-test-suite ( api-test+ ) >
+<!ATTLIST api-test-suite name NMTOKEN #REQUIRED >
+<!ATTLIST api-test-suite api-config-file CDATA #IMPLIED >
+
+<!ELEMENT api-test ( api-request | api-response | scenario-context )* >
+<!ATTLIST api-test test-name ID #REQUIRED >
+<!ATTLIST api-test api-to-test NMTOKEN #REQUIRED >
+<!ATTLIST api-test api-config-file CDATA #IMPLIED >
+
+<!ELEMENT api-request ( path | before-request | thread-pool-size | header-params | payload | url-params |  default-environment )* >
+<!ELEMENT before-request ( #PCDATA ) >
+<!ELEMENT path ( #PCDATA ) >
+<!ELEMENT thread-pool-size ( #PCDATA ) >
+<!ELEMENT default-environment ( #PCDATA ) >
+
+<!ELEMENT header-params ( param* ) >
+<!ATTLIST header-params source-name CDATA #IMPLIED >
+<!ATTLIST header-params source-type (excel | mongo | sql) "file" >
+<!ATTLIST header-params records-range CDATA #IMPLIED >
+<!ATTLIST header-params scenario-name-fields CDATA #IMPLIED >
+
+<!ELEMENT payload ( #PCDATA ) >
+<!ATTLIST payload source-name CDATA #IMPLIED >
+<!ATTLIST payload source-type (excel | mongo | sql) "mongo" >
+<!ATTLIST payload records-range CDATA #IMPLIED >
+<!ATTLIST payload scenario-name-fields CDATA #IMPLIED >
+<!ATTLIST payload template-source CDATA #IMPLIED >
+
+<!ELEMENT url-params ( param* ) >
+<!ATTLIST url-params source-name CDATA #IMPLIED >
+<!ATTLIST url-params source-type (file | excel | mongo | sql) "file" >
+<!ATTLIST url-params records-range CDATA #IMPLIED >
+<!ATTLIST url-params scenario-name-fields CDATA #IMPLIED >
+
+<!ELEMENT param EMPTY >
+<!ATTLIST param name NMTOKEN #REQUIRED >
+<!ATTLIST param column CDATA #IMPLIED >
+<!ATTLIST param override (true | false) "false" >
+<!ATTLIST param type ( path | colon | form |  query | noname | default ) "default">
+<!ATTLIST param value CDATA #IMPLIED >
+<!ATTLIST param encode (true | false) "false" >
+
+<!ELEMENT api-response ( after-response | get-fields | validations )* >
+<!ATTLIST api-response report-format (excel | html) "html">
+<!ATTLIST api-response valid-status-codes CDATA #IMPLIED >
+
+<!ELEMENT after-response ( #PCDATA ) >
+<!ELEMENT get-fields ( field+ ) >
+<!ELEMENT scenario-context ( field+ ) >
+
+<!ELEMENT validations ( validate* | repeat* ) >
+<!ATTLIST validations source-name CDATA #IMPLIED >
+<!ATTLIST validations source-type (file | excel | mongo | sql) "file" >
+<!ATTLIST validations records-range CDATA #IMPLIED >
+<!ATTLIST validations scenario-name-fields CDATA #IMPLIED >
+
+<!ELEMENT repeat (validate*) >
+<!ATTLIST repeat when CDATA #REQUIRED >
+<!ATTLIST repeat index CDATA #REQUIRED >
+<!ATTLIST repeat index-name CDATA #REQUIRED >
+
+<!ELEMENT field EMPTY>
+<!ATTLIST field name CDATA #REQUIRED >
+<!ATTLIST field path CDATA #REQUIRED >
+<!ATTLIST field source CDATA #IMPLIED >
+
+<!ELEMENT validate EMPTY >
+<!ATTLIST validate pre-condition CDATA #IMPLIED >
+<!ATTLIST validate name CDATA #IMPLIED >
+<!ATTLIST validate path CDATA #IMPLIED >
+<!ATTLIST validate validation-type (empty | not_empty | equals | not_equals | contains | not_contains | greater_than | lesser_than | expression ) "not_empty">
+<!ATTLIST validate expected-value CDATA #IMPLIED >
+<!ATTLIST validate expression CDATA #IMPLIED >
+<!ATTLIST validate messageId CDATA #IMPLIED >
+<!ATTLIST validate compare-to CDATA #IMPLIED >
+<!ATTLIST validate on-validation-failure ( mark_validation_failed | mark_scenario_failed | mark_test_failed | fail_and_stop) "mark_test_failed">
+<!ATTLIST validate compare-options (ignore_array_order) "ignore_array_order">
+<!ATTLIST validate exclusion-paths  CDATA #IMPLIED >
+<!ATTLIST validate array-paths-to-ignore-order CDATA #IMPLIED >

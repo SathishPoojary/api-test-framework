@@ -1,0 +1,16 @@
+<data-sources>
+	 <data-source>
+		<name>PROD</name>
+		<url>atubapi3001p.prod.ch3.s.com</url>
+		<username>apiOwner</username>
+		<password>ENC(7+3a8LLp1ku1sRaSfj/1sZ/cEn9IoQYg)</password>
+		<schema>carsApiDb</schema>
+	</data-source> 
+	<data-source>
+		<name>PILOT</name>
+		<url>atubohm3007p.prod.ch3.s.com</url>
+		<username>apiOwner</username>
+		<password>ENC(7+3a8LLp1ku1sRaSfj/1sZ/cEn9IoQYg)</password>
+		<schema>carsApiDb</schema>
+	</data-source>
+</data-sources>
