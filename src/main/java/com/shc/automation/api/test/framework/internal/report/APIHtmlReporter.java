@@ -3,20 +3,19 @@
  */
 package com.shc.automation.api.test.framework.internal.report;
 
-import java.util.Iterator;
-import java.util.Map;
-
+import com.shc.automation.api.test.framework.model.response.chain.APIChainTestsResponse;
+import com.shc.automation.api.test.framework.model.response.chain.compare.APIChainCompareTestResponseItem;
+import com.shc.automation.api.test.framework.model.response.chain.compare.APIChainCompareTestsBaseResponse;
+import com.shc.automation.api.test.framework.model.response.chain.APIChainTestsResponseItem;
+import com.shc.automation.api.test.framework.model.response.compare.APICompareTestsResponse;
+import com.shc.automation.api.test.framework.model.response.compare.APICompareTestsResponseItem;
+import com.shc.automation.api.test.framework.model.response.APIBaseResponse;
+import com.shc.automation.api.test.framework.model.response.APIScenarioResponse;
+import com.shc.automation.api.test.framework.model.response.APIResponse;
 import org.apache.log4j.Logger;
 
-import com.shc.automation.api.test.framework.chaining.entities.APIChainCompareTestResponseItem;
-import com.shc.automation.api.test.framework.chaining.entities.APIChainCompareTestsResponse;
-import com.shc.automation.api.test.framework.chaining.entities.APIChainTestsResponse;
-import com.shc.automation.api.test.framework.chaining.entities.APIChainTestsResponseItem;
-import com.shc.automation.api.test.framework.entities.APICompareTestsResponse;
-import com.shc.automation.api.test.framework.entities.APICompareTestsResponseItem;
-import com.shc.automation.api.test.framework.entities.APIResponse;
-import com.shc.automation.api.test.framework.entities.APITestResponse;
-import com.shc.automation.api.test.framework.entities.APITestResponseItem;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * @author spoojar
@@ -25,27 +24,27 @@ import com.shc.automation.api.test.framework.entities.APITestResponseItem;
 public class APIHtmlReporter {
 	private final Logger log = Logger.getLogger(this.getClass().getName());
 
-	public StringBuilder report(APIResponse testResponse) {
-		if (testResponse instanceof APITestResponse)
-			return report((APITestResponse) testResponse);
+	public StringBuilder report(APIBaseResponse testResponse) {
+		if (testResponse instanceof APIResponse)
+			return report((APIResponse) testResponse);
 		if (testResponse instanceof APICompareTestsResponse)
 			return report((APICompareTestsResponse) testResponse);
-		if (testResponse instanceof APIChainCompareTestsResponse)
-			return report((APIChainCompareTestsResponse) testResponse);
+		if (testResponse instanceof APIChainCompareTestsBaseResponse)
+			return report((APIChainCompareTestsBaseResponse) testResponse);
 		if (testResponse instanceof APIChainTestsResponse)
 			return report((APIChainTestsResponse) testResponse);
 
 		return null;
 	}
 
-	public StringBuilder report(APITestResponse testResponse) {
+	public StringBuilder report(APIResponse testResponse) {
 		StringBuilder printer = new StringBuilder();
 
-		Map<String, APITestResponseItem> responseItems = testResponse.getResponseItems();
-		Iterator<APITestResponseItem> iter = responseItems.values().iterator();
+		Map<String, APIScenarioResponse> responseItems = testResponse.getResponseItems();
+		Iterator<APIScenarioResponse> iter = responseItems.values().iterator();
 		log.info("Logging results for " + responseItems.size() + " responses");
 
-		APITestResponseItem responseItem = null;
+		APIScenarioResponse responseItem = null;
 		while (iter.hasNext()) {
 			responseItem = iter.next();
 			printer.append(APIHtmlTestItemLog.generateHtmlLog(responseItem));
@@ -91,7 +90,7 @@ public class APIHtmlReporter {
 	 * @param testResponse
 	 * @return
 	 */
-	public StringBuilder report(APIChainCompareTestsResponse testResponse) {
+	public StringBuilder report(APIChainCompareTestsBaseResponse testResponse) {
 		StringBuilder printer = new StringBuilder();
 		if(testResponse == null){
 			return printer;

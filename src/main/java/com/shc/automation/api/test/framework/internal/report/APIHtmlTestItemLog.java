@@ -1,22 +1,21 @@
 package com.shc.automation.api.test.framework.internal.report;
 
-import java.util.Iterator;
-import java.util.List;
 
+import com.shc.automation.api.test.framework.model.response.APIPrint;
+import com.shc.automation.api.test.framework.model.response.APIValidation;
+import com.shc.automation.api.test.framework.model.response.chain.compare.APIChainCompareTestResponseItem;
+import com.shc.automation.api.test.framework.model.response.chain.APIChainTestsResponseItem;
+import com.shc.automation.api.test.framework.model.response.compare.APICompareTestsResponseItem;
+import com.shc.automation.api.test.framework.model.response.APIScenarioResponse;
+import com.shc.automation.api.test.framework.model.response.ResultType;
+import com.shc.automation.api.test.framework.utils.APITestUtils;
+import com.shc.automation.utils.json.JsonMismatchField;
+import net.sf.json.JSONObject;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import com.shc.automation.api.test.framework.chaining.entities.APIChainCompareTestResponseItem;
-import com.shc.automation.api.test.framework.chaining.entities.APIChainTestsResponseItem;
-import com.shc.automation.api.test.framework.entities.APICompareTestsResponseItem;
-import com.shc.automation.api.test.framework.entities.APIPrintField;
-import com.shc.automation.api.test.framework.entities.APITestResponseItem;
-import com.shc.automation.api.test.framework.entities.APIValidationField;
-import com.shc.automation.api.test.framework.entities.ResultType;
-import com.shc.automation.api.test.framework.utils.APITestUtils;
-import com.shc.automation.utils.json.JsonMismatchField;
-
-import net.sf.json.JSONObject;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author spoojar
@@ -24,7 +23,7 @@ import net.sf.json.JSONObject;
  */
 public class APIHtmlTestItemLog {
 
-	public static StringBuilder generateHtmlLog(APITestResponseItem responseItem) {
+	public static StringBuilder generateHtmlLog(APIScenarioResponse responseItem) {
 		StringBuilder testItemLog = new StringBuilder();
 		if (responseItem == null)
 			return testItemLog;
@@ -36,7 +35,7 @@ public class APIHtmlTestItemLog {
 		return testItemLog;
 	}
 
-	private static String getResponseItemLog(APITestResponseItem responseItem) {
+	private static String getResponseItemLog(APIScenarioResponse responseItem) {
 		StringBuilder testItemLog = new StringBuilder();
 
 		testItemLog.append(APITestReportUtils.createEmptyFolder("URL : ", responseItem.getRequestUrl() == null ? "" : responseItem.getRequestUrl()));
@@ -52,14 +51,14 @@ public class APIHtmlTestItemLog {
 			return testItemLog.append(APITestReportUtils.getResultLog("Error : " + e.getMessage(), false)).toString();
 		}
 
-		testItemLog.append(APITestReportUtils.getResponseContentLog(responseItem.getPrintContentInReport(), responseItem.getExecutionTime(),
+		testItemLog.append(APITestReportUtils.getResponseContentLog(true, responseItem.getExecutionTime(),
 				responseItem.getResponseContentString()));
 		addPostResponseLog(responseItem, testItemLog, 0);
 
 		return testItemLog.toString();
 	}
 
-	private static void addPostResponseLog(APITestResponseItem responseItem, StringBuilder testItemLog, int itemNumber) {
+	private static void addPostResponseLog(APIScenarioResponse responseItem, StringBuilder testItemLog, int itemNumber) {
 		String title = "Validation Results ";
 		if (itemNumber > 0) {
 			title += itemNumber;
@@ -77,8 +76,8 @@ public class APIHtmlTestItemLog {
 
 		boolean compareResult = ResultType.PASSED.equals(responseItem.getResult()) ? true : false;
 		testItemLog.append(APITestReportUtils.getScenarioDiv(responseItem.getScenarioName(), compareResult));
-		APITestResponseItem responseItem1 = responseItem.getResponse1();
-		APITestResponseItem responseItem2 = responseItem.getResponse2();
+		APIScenarioResponse responseItem1 = responseItem.getResponse1();
+		APIScenarioResponse responseItem2 = responseItem.getResponse2();
 		if (responseItem1 == null || responseItem2 == null) {
 			testItemLog.append(APITestReportUtils.getVerificationLog("Test Failed : Invalid Test Response ", false));
 		} else {
@@ -121,12 +120,12 @@ public class APIHtmlTestItemLog {
 		if (responseItem == null)
 			return testItemLog;
 
-		List<APITestResponseItem> chainResp = responseItem.getTestChainResponse();
+		List<APIScenarioResponse> chainResp = responseItem.getTestChainResponse();
 
 		if (CollectionUtils.isNotEmpty(chainResp)) {
-			Iterator<APITestResponseItem> respIter = chainResp.iterator();
+			Iterator<APIScenarioResponse> respIter = chainResp.iterator();
 			int count = 0;
-			APITestResponseItem stepResponseItem = respIter.next();
+			APIScenarioResponse stepResponseItem = respIter.next();
 			testItemLog.append(APITestReportUtils.getScenarioDiv(stepResponseItem.getScenarioName(), ResultType.PASSED.equals(responseItem.getResult())));
 
 			do {
@@ -150,7 +149,7 @@ public class APIHtmlTestItemLog {
 		return testItemLog;
 	}
 
-	private static String logChainStep(APITestResponseItem responseItem, ResultType chainResult, int count) {
+	private static String logChainStep(APIScenarioResponse responseItem, ResultType chainResult, int count) {
 		StringBuilder chainItemLog = new StringBuilder();
 		if (responseItem == null)
 			return chainItemLog.toString();
@@ -210,8 +209,8 @@ public class APIHtmlTestItemLog {
 		if (responseItem == null)
 			return testItemLog;
 
-		APITestResponseItem responseItem1 = responseItem.getResponse1();
-		APITestResponseItem responseItem2 = responseItem.getResponse2();
+		APIScenarioResponse responseItem1 = responseItem.getResponse1();
+		APIScenarioResponse responseItem2 = responseItem.getResponse2();
 		if (responseItem1 == null || responseItem2 == null) {
 			testItemLog.append(APITestReportUtils.getVerificationLog("Test Failed : Invalid Test Response ", false));
 		} else {
@@ -268,14 +267,14 @@ public class APIHtmlTestItemLog {
 		return chainItemLog.toString();
 	}
 
-	private static String getValidatorLogs(List<APIValidationField> validators) {
+	private static String getValidatorLogs(List<APIValidation> validators) {
 		StringBuilder validatorsLog = new StringBuilder();
 		if (CollectionUtils.isEmpty(validators)) {
 			return validatorsLog.append(APITestReportUtils.endUL()).toString();
 		}
 
-		Iterator<APIValidationField> vals = validators.iterator();
-		APIValidationField validator = null;
+		Iterator<APIValidation> vals = validators.iterator();
+		APIValidation validator = null;
 		while (vals.hasNext()) {
 			validator = vals.next();
 			if (validator.getValidationResult()) {
@@ -299,7 +298,7 @@ public class APIHtmlTestItemLog {
 		return validatorsLog.append(APITestReportUtils.endUL()).toString();
 	}
 
-	private static String getPrinterLogs(List<APIPrintField> printers, int itemNumber) {
+	private static String getPrinterLogs(List<APIPrint> printers, int itemNumber) {
 		StringBuilder printersLog = new StringBuilder();
 		if (CollectionUtils.isEmpty(printers)) {
 			return printersLog.toString();
@@ -309,8 +308,8 @@ public class APIHtmlTestItemLog {
 			title += itemNumber;
 		}
 		printersLog.append(APITestReportUtils.createFolder(title, "", false));
-		Iterator<APIPrintField> prints = printers.iterator();
-		APIPrintField printer = null;
+		Iterator<APIPrint> prints = printers.iterator();
+		APIPrint printer = null;
 		while (prints.hasNext()) {
 			printer = prints.next();
 			String key = StringUtils.isBlank(printer.getPrintName()) ? APITestUtils.getAbsoluteResponsePath(printer.getResponsePath()) : printer.getPrintName();
@@ -326,7 +325,7 @@ public class APIHtmlTestItemLog {
 
 		String str = json.toString();
 		if (str.startsWith("<")) {
-			return APITestResponseItem.prettyPrintXml(json.toString());
+			return APIScenarioResponse.prettyPrintXml(json.toString());
 		}
 
 		return JSONObject.fromObject(json.toString());

@@ -7,6 +7,21 @@ http://maven.apache.org/changes/1.0.0 ">
 		<author email="spoojar@searshc.com">Sathish Poojary</author>
 	</properties>
 	<body>
+		<release version="9.2" date="2019-30-01" description="New Release">
+			<action dev="spoojar" type="fix">
+				Add multiple Input Source support for a Test case
+			</action>
+		</release>
+		<release version="9.1" date="2019-30-01" description="New Release">
+			<action dev="spoojar" type="fix">
+				Add multiple Input Source support for a Test case
+			</action>
+		</release>
+		<release version="9.0" date="2019-30-01" description="New Release">
+			<action dev="spoojar" type="fix">
+				Add multiple Input Source support for a Test case
+			</action>
+		</release>
 		<release version="8.7.11" date="2018-30-08" description="New Release">
 			<action dev="spoojar" type="fix">
 				Add multiple Input Source support for a Test case

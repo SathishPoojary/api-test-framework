@@ -3,18 +3,29 @@
  */
 package com.shc.automation.api.test.framework.utils;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
+import com.google.common.primitives.Primitives;
+import com.google.inject.Inject;
+import com.shc.automation.api.test.framework.APITestConstants;
+import com.shc.automation.api.test.framework.exception.APITestException;
+import com.shc.automation.api.test.framework.internal.config.APIPropertyQueryConfig;
+import com.shc.automation.api.test.framework.internal.connect.APINoSQLDataManager;
+import com.shc.automation.api.test.framework.internal.connect.APISQLDataManager;
+import com.shc.automation.api.test.framework.internal.request.readers.source.APIExcelReader;
+import com.shc.automation.api.test.framework.internal.response.APIScenarioResponseParser;
+import com.shc.automation.api.test.framework.model.response.compare.APICompareTestsResponse;
+import com.shc.automation.api.test.framework.model.response.APIPrint;
+import com.shc.automation.api.test.framework.model.response.compare.APICompareTestsResponseItem;
+import com.shc.automation.api.test.framework.model.request.APIDataSourceType;
+import com.shc.automation.api.test.framework.model.request.APITestDataSource;
+import com.shc.automation.api.test.framework.model.response.APIBaseResponse;
+import com.shc.automation.api.test.framework.model.response.APIScenarioResponse;
+import com.shc.automation.utils.json.JsonMismatchField;
+import com.shc.automation.utils.json.JsonUtils;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+import net.sf.json.util.JSONUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -24,31 +35,13 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.log4j.Logger;
 
-import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
-import com.google.common.primitives.Primitives;
-import com.shc.automation.api.test.framework.entities.APICompareTestsResponse;
-import com.shc.automation.api.test.framework.entities.APICompareTestsResponseItem;
-import com.shc.automation.api.test.framework.entities.APIDataSourceType;
-import com.shc.automation.api.test.framework.entities.APIPrintField;
-import com.shc.automation.api.test.framework.entities.APIResponse;
-import com.shc.automation.api.test.framework.entities.APITestConstants;
-import com.shc.automation.api.test.framework.entities.APITestInputSource;
-import com.shc.automation.api.test.framework.entities.APITestResponseItem;
-import com.shc.automation.api.test.framework.entities.ResultType;
-import com.shc.automation.api.test.framework.exception.APITestException;
-import com.shc.automation.api.test.framework.internal.APIResponseItemProcessor;
-import com.shc.automation.api.test.framework.internal.config.QueryProperty;
-import com.shc.automation.api.test.framework.internal.connect.DocumentDBManager;
-import com.shc.automation.api.test.framework.internal.connect.SQLDBManager;
-import com.shc.automation.api.test.framework.internal.process.source.APIExcelSourceProcessor;
-import com.shc.automation.api.test.framework.internal.validators.APIResponseValidator;
-import com.shc.automation.utils.json.JsonMismatchField;
-import com.shc.automation.utils.json.JsonUtils;
-
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
-import net.sf.json.util.JSONUtils;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author spoojar
@@ -57,12 +50,24 @@ import net.sf.json.util.JSONUtils;
 public class APITestUtils {
 	private static Logger log = Logger.getLogger("APITestUtils");
 
+	@Inject
+	private static APINoSQLDataManager noSQLDataManager;
+
+	@Inject
+	private static APISQLDataManager sqlDataManager;
+
+	@Inject
+	private static APIPropertyQueryConfig propertyQueryConfig;
+
+	@Inject
+	private static APIExcelReader excelReader;
+
 	/**
 	 * Retrieve the Document(PayLoad) from Mongo database collection for a given
 	 * document id. This method is used to get the PayLoad directly from Mongo
 	 * (instead of using API Test configuration)<br/>
 	 * The PayLoad map obtained through this method is either set in the
-	 * APITestRequest(externalPayload) or passed to APITestManager::runTest()
+	 * APIRequest(externalPayload) or passed to APITestManager::runTest()
 	 * through one of the overloaded methods.
 	 * 
 	 * @param dbName
@@ -84,7 +89,7 @@ public class APITestUtils {
 	 * document id. This method is used to get the PayLoad directly from Mongo
 	 * (instead of using API Test configuration)<br/>
 	 * The PayLoad map obtained through this method is either set in the
-	 * APITestRequest(externalPayload) or passed to APITestManager::runTest()
+	 * APIRequest(externalPayload) or passed to APITestManager::runTest()
 	 * through one of the overloaded methods.
 	 * 
 	 * @param dbName
@@ -110,7 +115,7 @@ public class APITestUtils {
 	 * is used to get the PayLoad directly from Mongo (instead of using API Test
 	 * configuration)<br/>
 	 * The PayLoad map obtained through this method is either set in the
-	 * APITestRequest(externalPayload) or passed to APITestManager::runTest()
+	 * APIRequest(externalPayload) or passed to APITestManager::runTest()
 	 * through one of the overloaded methods.
 	 * 
 	 * @param dbName
@@ -131,7 +136,7 @@ public class APITestUtils {
 	 * is used to get the PayLoad directly from Mongo (instead of using API Test
 	 * configuration)<br/>
 	 * The PayLoad map obtained through this method is either set in the
-	 * APITestRequest(externalPayload) or passed to APITestManager::runTest()
+	 * APIRequest(externalPayload) or passed to APITestManager::runTest()
 	 * through one of the overloaded methods.
 	 * 
 	 * @param dbName
@@ -155,7 +160,7 @@ public class APITestUtils {
 	 * is used to get the PayLoad directly from Mongo (instead of using API Test
 	 * configuration)<br/>
 	 * The PayLoad map obtained through this method is either set in the
-	 * APITestRequest(externalPayload) or passed to APITestManager::runTest()
+	 * APIRequest(externalPayload) or passed to APITestManager::runTest()
 	 * through one of the overloaded methods.
 	 * 
 	 * @param dbName
@@ -181,7 +186,7 @@ public class APITestUtils {
 	 * is used to get the PayLoad directly from Mongo (instead of using API Test
 	 * configuration)<br/>
 	 * The PayLoad map obtained through this method is either set in the
-	 * APITestRequest(externalPayload) or passed to APITestManager::runTest()
+	 * APIRequest(externalPayload) or passed to APITestManager::runTest()
 	 * through one of the overloaded methods.
 	 * 
 	 * @param dbName
@@ -219,9 +224,9 @@ public class APITestUtils {
 
 		List<JSONObject> records = null;
 		if (StringUtils.isNotBlank(documentId)) {
-			records = DocumentDBManager.INSTANCE.getDocumentById(dbName, collectionName, documentId);
+			records = noSQLDataManager.getDocumentById(dbName, collectionName, documentId);
 		} else {
-			records = DocumentDBManager.INSTANCE.getDocument(dbName, collectionName, skipRecords, maxRecords);
+			records = noSQLDataManager.getDocument(dbName, collectionName, skipRecords, maxRecords);
 		}
 
 		if (records == null) {
@@ -273,7 +278,7 @@ public class APITestUtils {
 	 * Replace the Keys identified in the template by the actual values from the
 	 * payloadEntries <br/>
 	 * The PayLoad map obtained through this method is either set in the
-	 * APITestRequest(externalPayload) or passed to APITestManager::runTest()
+	 * APIRequest(externalPayload) or passed to APITestManager::runTest()
 	 * through one of the overloaded methods.
 	 * 
 	 * @param templateDB
@@ -314,7 +319,7 @@ public class APITestUtils {
 	 * Replace the Keys identified in the template by the actual values from the
 	 * payloadEntries <br/>
 	 * The PayLoad map obtained through this method is either set in the
-	 * APITestRequest(externalPayload) or passed to APITestManager::runTest()
+	 * APIRequest(externalPayload) or passed to APITestManager::runTest()
 	 * through one of the overloaded methods.
 	 * 
 	 * @param payloadEntries
@@ -358,7 +363,7 @@ public class APITestUtils {
 	 * This method is used to get Results of a Query as a List containing map of
 	 * Key(Column Name) / Value (Column Value) format. The result can be directly
 	 * passed as Query Parameters to API through APITestManager::runTest overloaded
-	 * method or set in the APITestRequest(externalURLParameters)
+	 * method or set in the APIRequest(externalURLParameters)
 	 * 
 	 * @param queryName
 	 *            Name of the query store in the properties file (api-data-db)
@@ -369,8 +374,8 @@ public class APITestUtils {
 		if (StringUtils.isEmpty(queryName))
 			return null;
 
-		String query = QueryProperty.INSTANCE.getSQLQuery(queryName);
-		List<Map<String, Object>> list = SQLDBManager.INSTANCE.getRecords(query, 0, 0);
+		String query = propertyQueryConfig.getSQLQuery(queryName);
+		List<Map<String, Object>> list = sqlDataManager.getRecords(null, query, 0, 0);
 		if (list == null || list.isEmpty()) {
 			log.error("No records found for :" + queryName);
 			return null;
@@ -383,9 +388,9 @@ public class APITestUtils {
 	 * This method is used to get Rows of a excel file as a List containing map of
 	 * Key(Column Name) / Value (Column Value) format. The result can be directly
 	 * passed as Query Parameters to API through APITestManager::runTest overloaded
-	 * method or set in the APITestRequest(externalURLParameters)
+	 * method or set in the APIRequest(externalURLParameters)
 	 * 
-	 * @param queryName
+	 * @param excelSourceProperty
 	 *            Name of the excel reference in the properties file (api-file-db)
 	 * 
 	 * @return Excel records in Key/Value Map List
@@ -399,9 +404,9 @@ public class APITestUtils {
 	 * This method is used to get Rows of a excel file as a List containing map of
 	 * Key(Column Name) / Value (Column Value) format. The result can be directly
 	 * passed as Query Parameters to API through APITestManager::runTest overloaded
-	 * method or set in the APITestRequest(externalURLParameters)
+	 * method or set in the APIRequest(externalURLParameters)
 	 * 
-	 * @param queryName
+	 * @param excelSourceProperty
 	 *            Name of the excel reference in the properties file (api-file-db)
 	 * 
 	 * @return Excel records in Key/Value Map List
@@ -411,7 +416,7 @@ public class APITestUtils {
 			log.error("Empty Excel Source Property :" + excelSourceProperty);
 			return null;
 		}
-		APITestInputSource source = new APITestInputSource();
+		APITestDataSource source = new APITestDataSource();
 		source.setSourceType(APIDataSourceType.excel.toString());
 		if (excelSourceProperty.indexOf('[') != -1) {
 			String targetPath = excelSourceProperty.substring(excelSourceProperty.indexOf('[') + 1, excelSourceProperty.length() - 1);
@@ -423,7 +428,7 @@ public class APITestUtils {
 		source.setFromIndex(startIndex);
 		source.setToIndex(endIndex);
 
-		Map<String, Map<String, Object>> records = new APIExcelSourceProcessor().processRequestSource(source, null);
+		Map<String, Map<String, Object>> records = excelReader.processRequestSource(source, null);
 
 		if (records != null) {
 			return new ArrayList<Map<String, Object>>(records.values());
@@ -545,17 +550,17 @@ public class APITestUtils {
 	 * displayed in the logger.
 	 * 
 	 * @param responseItem
-	 *            APITestResponseItem containing the API JSon Response from where
+	 *            APIScenarioResponse containing the API JSon Response from where
 	 *            the field to be extracted
 	 * @param name
 	 *            Name of the field to be printed
 	 * @param path
 	 *            JSon Path of the API JSon Response whose value needs to be printed
 	 */
-	public static void addPrinter(APITestResponseItem responseItem, String name, String path) {
+	public static void addPrinter(APIScenarioResponse responseItem, String name, String path) {
 
 		Object object = readFromJSON(responseItem.getResponseContent(), path, true);
-		APIPrintField print = new APIPrintField();
+		APIPrint print = new APIPrint();
 		print.setPrintName(name);
 		print.setResponsePath(path);
 		print.setResponseValue(object == null ? null : object.toString());
@@ -573,7 +578,7 @@ public class APITestUtils {
 	 * @return Map of JSON Path and No. of Times it appeared as a mismatch in the
 	 *         overall comparison
 	 */
-	public static Map<String, Integer> getMismatchedFieldFrequencyMap(APIResponse response) {
+	public static Map<String, Integer> getMismatchedFieldFrequencyMap(APIBaseResponse response) {
 		if (response == null || CollectionUtils.isEmpty(response.getFailedScenarioList())) {
 			log.info("Response is Null or No failed scenarios");
 			return null;
@@ -606,7 +611,7 @@ public class APITestUtils {
 	/**
 	 * This method is used to update the API JSon Path to API Test JSon Path (API
 	 * Test JSon path is different from actual API JSon Path since API wraps the
-	 * entire response inside "APITestResponse"
+	 * entire response inside "APIResponse"
 	 * 
 	 * @param path
 	 *            - JSon Path needs to be updated
@@ -628,7 +633,7 @@ public class APITestUtils {
 	/**
 	 * This method is used to get the API JSon Path from API Test JSon Path (API
 	 * Test JSon path is different from actual API JSon Path since API wraps the
-	 * entire response inside "APITestResponse"
+	 * entire response inside "APIResponse"
 	 * 
 	 * @param path
 	 *            JSon Path
@@ -663,7 +668,7 @@ public class APITestUtils {
 	 * @param path
 	 *            PATH in the JSONObject whose value need to be returned
 	 * @param appendAPIKey
-	 *            If true, path will be appended with "APITestResponse". This is
+	 *            If true, path will be appended with "APIResponse". This is
 	 *            mainly used for the JSON response returned by API Framework.
 	 * 
 	 * @return Object (String, List) based on the return value. Refer to
@@ -722,7 +727,7 @@ public class APITestUtils {
 		HttpRequestBase apiHttpMethod = new HttpGet("http://cars.prod.ch3.s.com/user/services/dsjson");
 		try {
 			CloseableHttpResponse response = HttpClientBuilder.create().build().execute(apiHttpMethod);
-			String respStr = APIResponseItemProcessor.getBody(response);
+			String respStr = APIScenarioResponseParser.getBody(response);
 			if (respStr != null) {
 				JSONObject respObj = JSONObject.fromObject(respStr);
 				@SuppressWarnings("unchecked")
@@ -742,20 +747,6 @@ public class APITestUtils {
 			e.printStackTrace();
 		}
 		return "";
-	}
-
-	/**
-	 * @param responseItem
-	 */
-	public static boolean revalidateScenarioResponse(APITestResponseItem responseItem) {
-		if (responseItem == null) {
-			return false;
-		}
-		boolean valid = responseItem.getValidResponse();
-		valid = valid & new APIResponseValidator().validate(responseItem, null);
-		responseItem.setResult((valid ? ResultType.PASSED : ResultType.FAILED));
-
-		return valid;
 	}
 
 	public static Object getValueFromRecord(String path, Map<String, Object> record) {
@@ -780,8 +771,8 @@ public class APITestUtils {
 	@SuppressWarnings("rawtypes")
 	public static boolean allSimpleValues(List array) {
 
-		for (int i = 0; i < array.size(); ++i) {
-			if (!Primitives.isWrapperType(array.get(i).getClass()) && !(array.get(i) instanceof String)) {
+		for (Object element : array) {
+			if (!Primitives.isWrapperType(element.getClass()) && !(element instanceof String)) {
 				return false;
 			}
 		}

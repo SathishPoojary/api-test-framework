@@ -1,13 +1,13 @@
 <data-sources>
 	 <data-source>
-		<name>PROD</name>
+		<testName>PROD</testName>
 		<url>atubapi3001p.prod.ch3.s.com</url>
 		<username>apiOwner</username>
 		<password>ENC(7+3a8LLp1ku1sRaSfj/1sZ/cEn9IoQYg)</password>
 		<schema>carsApiDb</schema>
 	</data-source> 
 	<data-source>
-		<name>PILOT</name>
+		<testName>PILOT</testName>
 		<url>atubohm3007p.prod.ch3.s.com</url>
 		<username>apiOwner</username>
 		<password>ENC(7+3a8LLp1ku1sRaSfj/1sZ/cEn9IoQYg)</password>

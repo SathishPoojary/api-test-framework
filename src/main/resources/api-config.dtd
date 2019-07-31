@@ -1,7 +1,7 @@
 <!ELEMENT api-config ( api+ ) >
 
 <!ELEMENT api ( end-point | default-environment | path | request-per-sec | header-params | payload | url-params | socket-timeout | url )* >
-<!ATTLIST api name NMTOKEN #REQUIRED >
+<!ATTLIST api testName NMTOKEN #REQUIRED >
 <!ATTLIST api type ( GET | POST | PUT | DELETE ) "GET" >
 
 <!ELEMENT end-point ( #PCDATA ) >
@@ -20,7 +20,7 @@
 <!ATTLIST url-params param-type ( path | colon | form | query | noname ) "query" >
 
 <!ELEMENT param EMPTY >
-<!ATTLIST param name NMTOKEN #REQUIRED >
+<!ATTLIST param testName NMTOKEN #REQUIRED >
 <!ATTLIST param column CDATA #IMPLIED >
 <!ATTLIST param override (true | false) "false" >
 <!ATTLIST param type ( path | colon | form |  query | noname | default ) "default">

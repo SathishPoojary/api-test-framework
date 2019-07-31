@@ -3,34 +3,28 @@
  */
 package com.shc.automation.api.test.framework.internal.report;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import com.shc.automation.adapter.ExcelAdapter;
+import com.shc.automation.adapter.ExcelAdapterImpl;
+import com.shc.automation.api.test.framework.model.response.chain.APIChainTestsResponse;
+import com.shc.automation.api.test.framework.model.response.compare.APICompareTestsResponse;
+import com.shc.automation.api.test.framework.model.response.APIPrint;
+import com.shc.automation.api.test.framework.model.response.APIValidation;
+import com.shc.automation.api.test.framework.model.response.compare.APICompareTestsResponseItem;
+import com.shc.automation.api.test.framework.model.response.APIResponse;
+import com.shc.automation.api.test.framework.model.response.APIScenarioResponse;
+import com.shc.automation.entity.*;
+import com.shc.automation.excelservice.ExcelProcessor;
+import com.shc.automation.utils.json.JsonMismatchField;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-
 import testNG.Config;
 
-import com.shc.automation.adapter.ExcelAdapter;
-import com.shc.automation.adapter.ExcelAdapterImpl;
-import com.shc.automation.api.test.framework.chaining.entities.APIChainTestsResponse;
-import com.shc.automation.api.test.framework.entities.APICompareTestsResponse;
-import com.shc.automation.api.test.framework.entities.APICompareTestsResponseItem;
-import com.shc.automation.api.test.framework.entities.APIPrintField;
-import com.shc.automation.api.test.framework.entities.APITestResponse;
-import com.shc.automation.api.test.framework.entities.APITestResponseItem;
-import com.shc.automation.api.test.framework.entities.APIValidationField;
-import com.shc.automation.entity.ExcelComparisonResponseItem;
-import com.shc.automation.entity.ExcelMismatchField;
-import com.shc.automation.entity.ExcelPrintField;
-import com.shc.automation.entity.ExcelTestResponseItem;
-import com.shc.automation.entity.ExcelValidationField;
-import com.shc.automation.excelservice.ExcelProcessor;
-import com.shc.automation.utils.json.JsonMismatchField;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author spoojar
@@ -39,9 +33,9 @@ import com.shc.automation.utils.json.JsonMismatchField;
 public class APIExcelReporter {
 	private final Logger log = Logger.getLogger(this.getClass().getName());
 
-	public HSSFWorkbook generateExcel(APITestResponse apiTestResponse) {
+	public HSSFWorkbook generateExcel(APIResponse apiTestResponse) {
 		String testName = apiTestResponse.getTestName();
-		Map<String, APITestResponseItem> testResponseItemList = apiTestResponse.getResponseItems();
+		Map<String, APIScenarioResponse> testResponseItemList = apiTestResponse.getResponseItems();
 
 		List<ExcelTestResponseItem> excelResponseItemList = getExcelEntityList(testName, testResponseItemList);
 		if (CollectionUtils.isNotEmpty(excelResponseItemList)) {
@@ -50,7 +44,7 @@ public class APIExcelReporter {
 				ExcelAdapter ex = new ExcelAdapterImpl();
 				return excelProcessor.createWorkbook(ex.populateSimpleExcelEntity(excelResponseItemList));
 			} catch (Exception e) {
-				log.error("Failed to create EXCEL file for test :" + testName, e);
+				log.error("Failed to read EXCEL file for test :" + testName, e);
 
 			}
 		}
@@ -69,7 +63,7 @@ public class APIExcelReporter {
 				ExcelAdapter ex = new ExcelAdapterImpl();
 				return excelProcessor.createWorkbook(ex.populateComparisonExcelEntity(excelResponseItemList));
 			} catch (Exception e) {
-				log.error("Failed to create EXCEL file for test :" + testName, e);
+				log.error("Failed to read EXCEL file for test :" + testName, e);
 
 			}
 		}
@@ -77,8 +71,8 @@ public class APIExcelReporter {
 		return null;
 	}
 
-	public String report(APITestResponse apiTestResponse, String testName, String reportName) {
-		Map<String, APITestResponseItem> testResponseItemList = apiTestResponse.getResponseItems();
+	public String report(APIResponse apiTestResponse, String testName, String reportName) {
+		Map<String, APIScenarioResponse> testResponseItemList = apiTestResponse.getResponseItems();
 
 		List<ExcelTestResponseItem> excelResponseItemList = getExcelEntityList(testName, testResponseItemList);
 		if (CollectionUtils.isNotEmpty(excelResponseItemList)) {
@@ -88,7 +82,7 @@ public class APIExcelReporter {
 				excelProcessor.startProcessing(getLogFilePath(reportName), ex.populateSimpleExcelEntity(excelResponseItemList));
 
 			} catch (Exception e) {
-				log.error("Failed to create EXCEL file for test :" + testName, e);
+				log.error("Failed to read EXCEL file for test :" + testName, e);
 
 			}
 		}
@@ -107,7 +101,7 @@ public class APIExcelReporter {
 			try {
 				excelProcessor.startProcessing(getLogFilePath(reportName), ex.populateComparisonExcelEntity(excelComparisonResponseItemList));
 			} catch (Exception e) {
-				log.error("Failed to create EXCEL file for test :" + testName, e);
+				log.error("Failed to read EXCEL file for test :" + testName, e);
 
 			}
 		}
@@ -115,7 +109,7 @@ public class APIExcelReporter {
 		return getReportLink(reportName, false).toString();
 	}
 
-	private List<ExcelTestResponseItem> getExcelEntityList(String testName, Map<String, APITestResponseItem> testResponseItemList) {
+	private List<ExcelTestResponseItem> getExcelEntityList(String testName, Map<String, APIScenarioResponse> testResponseItemList) {
 		List<ExcelTestResponseItem> excelResponseItemList = new ArrayList<ExcelTestResponseItem>();
 		ExcelTestResponseItem excelTestResponseItem = null;
 
@@ -126,7 +120,7 @@ public class APIExcelReporter {
 		String mongoRecordId = null;
 		String result = null;
 
-		for (APITestResponseItem testResponseItem : testResponseItemList.values()) {
+		for (APIScenarioResponse testResponseItem : testResponseItemList.values()) {
 
 			excelValidationFieldMap = getExcelValidatorMap(testResponseItem.getValidators());
 			excelPrintFieldMap = getExcelPrinterMap(testResponseItem.getPrinters());
@@ -185,45 +179,45 @@ public class APIExcelReporter {
 		return excelComparisonResponseItemList;
 	}
 
-	private Map<String, ExcelValidationField> getExcelValidatorMap(List<APIValidationField> validations) {
+	private Map<String, ExcelValidationField> getExcelValidatorMap(List<APIValidation> validations) {
 		if (CollectionUtils.isEmpty(validations)) {
 			return null;
 		}
 
 		Map<String, ExcelValidationField> excelValidationFieldMap = new HashMap<String, ExcelValidationField>();
-		for (APIValidationField entry : validations) {
+		for (APIValidation entry : validations) {
 			excelValidationFieldMap.put(entry.getResponsePath(), getExcelValidationField(entry));
 		}
 		return excelValidationFieldMap;
 	}
 
-	private ExcelValidationField getExcelValidationField(APIValidationField apiValidationField) {
-		if (apiValidationField == null) {
+	private ExcelValidationField getExcelValidationField(APIValidation apiValidation) {
+		if (apiValidation == null) {
 			return null;
 		}
-		String expected = apiValidationField.getExpectedResponseValue() == null ? null : apiValidationField.getExpectedResponseValue().toString();
-		String actual = apiValidationField.getActualResponseValue() == null ? null : apiValidationField.getActualResponseValue().toString();
-		String validationType = apiValidationField.getValidationType() == null ? null : apiValidationField.getValidationType().toString();
-		String result = apiValidationField.getValidationResult() == null ? null : apiValidationField.getValidationResult().toString();
-		return new ExcelValidationField(apiValidationField.getValidationName(), apiValidationField.getResponsePath(), expected, actual, validationType, result, apiValidationField.getValidationMessage());
+		String expected = apiValidation.getExpectedResponseValue() == null ? null : apiValidation.getExpectedResponseValue().toString();
+		String actual = apiValidation.getActualResponseValue() == null ? null : apiValidation.getActualResponseValue().toString();
+		String validationType = apiValidation.getValidationType() == null ? null : apiValidation.getValidationType().toString();
+		String result = apiValidation.getValidationResult() == null ? null : apiValidation.getValidationResult().toString();
+		return new ExcelValidationField(apiValidation.getValidationName(), apiValidation.getResponsePath(), expected, actual, validationType, result, apiValidation.getValidationMessage());
 	}
 
-	private Map<String, ExcelPrintField> getExcelPrinterMap(List<APIPrintField> printers) {
+	private Map<String, ExcelPrintField> getExcelPrinterMap(List<APIPrint> printers) {
 		if (CollectionUtils.isEmpty(printers)) {
 			return null;
 		}
 
 		Map<String, ExcelPrintField> excelPrintFieldMap = new HashMap<String, ExcelPrintField>();
-		for (APIPrintField entry : printers) {
+		for (APIPrint entry : printers) {
 			excelPrintFieldMap.put(entry.getPrintName(), getExcelPrintField(entry));
 		}
 		return excelPrintFieldMap;
 	}
 
-	private ExcelPrintField getExcelPrintField(APIPrintField apiPrintField) {
-		if (apiPrintField == null)
+	private ExcelPrintField getExcelPrintField(APIPrint apiPrint) {
+		if (apiPrint == null)
 			return null;
-		return new ExcelPrintField(apiPrintField.getPrintName(), apiPrintField.getResponsePath(), (apiPrintField.getResponseValue() == null ? null : apiPrintField.getResponseValue().toString()));
+		return new ExcelPrintField(apiPrint.getPrintName(), apiPrint.getResponsePath(), (apiPrint.getResponseValue() == null ? null : apiPrint.getResponseValue().toString()));
 	}
 
 	public StringBuffer getReportLink(String reportName, boolean isChain) {
